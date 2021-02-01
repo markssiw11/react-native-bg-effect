@@ -56,9 +56,11 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-    ]).start(() => {
+    ]).start((o) => {
       const newConfig = getConfig(typeEffect);
-      setConfig(newConfig);
+      if (o.finished) {
+        setConfig(newConfig);
+      }
     });
   };
 

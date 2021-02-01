@@ -18,20 +18,20 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
   const animatedRotation = useRef(new Animated.Value(0)).current;
   const animatedSwing = useRef(new Animated.Value(0)).current;
 
-  const runAnimation = () => {
+  const runAnimation = (start) => {
     animatedY.setValue(START_Y_POSITION);
     animatedRotation.setValue(0);
 
-    Animated.loop(
+    const animatedRotationLoop = Animated.loop(
       Animated.timing(animatedRotation, {
         toValue: 1,
         duration: config.rotationDuration,
         useNativeDriver: true,
         easing: Easing.linear,
       }),
-    ).start();
+    )
 
-    Animated.loop(
+    const animatedSwingLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(animatedSwing, {
           toValue: -1,
@@ -46,9 +46,9 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
           useNativeDriver: true,
         }),
       ]),
-    ).start();
+    )
 
-    Animated.sequence([
+    const animatedYSequence = Animated.sequence([
       Animated.delay(config.fallDelay),
       Animated.timing(animatedY, {
         toValue: scene.height,
@@ -56,18 +56,26 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
         easing: Easing.linear,
         useNativeDriver: true,
       }),
-    ]).start((o) => {
-      const newConfig = getConfig(typeEffect);
-      if (o.finished) {
+    ])
+    if (start) {
+      animatedRotationLoop.start();
+      animatedSwingLoop.start();
+      animatedYSequence.start(() => {
+        const newConfig = getConfig();
         setConfig(newConfig);
-      }
-    });
+      });
+    } else {
+      animatedRotationLoop.stop();
+      animatedSwingLoop.stop();
+      animatedYSequence.stop();
+    }
   };
 
   useEffect(() => {
     if (config) {
-      runAnimation();
+      runAnimation(true);
     }
+    return runAnimation(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 

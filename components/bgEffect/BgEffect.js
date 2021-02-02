@@ -17,71 +17,73 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
   const animatedY = useRef(new Animated.Value(START_Y_POSITION)).current;
   const animatedRotation = useRef(new Animated.Value(0)).current;
   const animatedSwing = useRef(new Animated.Value(0)).current;
+  const animatedRotationLoop = Animated.loop(
+    Animated.timing(animatedRotation, {
+      toValue: 1,
+      duration: config.rotationDuration,
+      useNativeDriver: true,
+      easing: Easing.linear,
+    }),
+  );
 
-  const runAnimation = (start) => {
+  const animatedSwingLoop = Animated.sequence([
+    Animated.timing(animatedSwing, {
+      toValue: -1,
+      duration: config.swingDuration,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }),
+    Animated.timing(animatedSwing, {
+      toValue: 1,
+      duration: config.swingDuration,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }),
+  ]);
+
+  const animatedYSequence = Animated.sequence([
+    Animated.delay(config.fallDelay),
+    Animated.timing(animatedY, {
+      toValue: scene.height,
+      duration: config.fallDuration,
+      easing: Easing.linear,
+      useNativeDriver: true,
+    }),
+  ]);
+
+  const runAnimation = () => {
     animatedY.setValue(START_Y_POSITION);
     animatedRotation.setValue(0);
 
-    const animatedRotationLoop = Animated.loop(
-      Animated.timing(animatedRotation, {
-        toValue: 1,
-        duration: config.rotationDuration,
-        useNativeDriver: true,
-        easing: Easing.linear,
-      }),
-    )
-
-    const animatedSwingLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(animatedSwing, {
-          toValue: -1,
-          duration: config.swingDuration,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(animatedSwing, {
-          toValue: 1,
-          duration: config.swingDuration,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-      ]),
-    )
-
-    const animatedYSequence = Animated.sequence([
-      Animated.delay(config.fallDelay),
-      Animated.timing(animatedY, {
-        toValue: scene.height,
-        duration: config.fallDuration,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    ])
-    if (start) {
-      animatedRotationLoop.start();
-      animatedSwingLoop.start();
-      animatedYSequence.start(() => {
-        const newConfig = getConfig(typeEffect);
-        setConfig(newConfig);
+    if (animatedRotationLoop && animatedSwingLoop && animatedYSequence) {
+      animatedRotationLoop?.start();
+      animatedSwingLoop?.start();
+      animatedYSequence?.start((o) => {
+        if (o.finished) {
+          const newConfig = getConfig(typeEffect);
+          setConfig(newConfig);
+        }
       });
-    } else {
-      animatedRotationLoop.stop();
-      animatedSwingLoop.stop();
-      animatedYSequence.stop();
     }
   };
+  const stopAnimation = () => {
+    animatedRotationLoop.stop();
+    animatedSwingLoop.stop();
+    animatedYSequence.stop();
+  };
 
-  useEffect(() => {
-    return () => runAnimation(false)
-  }, []);
+ 
 
   useEffect(() => {
     if (config) {
-      runAnimation(true);
+      runAnimation();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
+  useEffect(() => {
+    return () => stopAnimation()
+  }, []);
   const rotate = animatedRotation.interpolate({
     inputRange: [0, 1],
     outputRange: config.rotationDirection

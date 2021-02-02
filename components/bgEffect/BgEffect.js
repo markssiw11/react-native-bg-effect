@@ -61,7 +61,7 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
       animatedRotationLoop.start();
       animatedSwingLoop.start();
       animatedYSequence.start(() => {
-        const newConfig = getConfig();
+        const newConfig = getConfig(typeEffect);
         setConfig(newConfig);
       });
     } else {

@@ -75,7 +75,7 @@ function BgEffect({scene, typeEffect = BgEffect_Types_Default}) {
     if (config) {
       runAnimation(true);
     }
-    return runAnimation(false)
+    return () => runAnimation(false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
